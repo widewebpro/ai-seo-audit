@@ -44,7 +44,7 @@
             {% else %}
                 <p class="light">{{ "You can uncheck all sections to run a full-site audit."|t('ai-seo-audit') }}</p>
                 <div class="checkboxgroup">
-                    {% for section in craft.app.sections.getAllSections() %}
+                    {% for section in craft.app.entries.getAllSections() %}
                         {% if section.id in settings.selectedSectionIds %}
                             <label>
                                 <input type="checkbox" name="sectionIds[]" value="{{ section.id }}" checked>
