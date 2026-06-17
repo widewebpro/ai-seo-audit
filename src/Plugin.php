@@ -125,7 +125,7 @@ class Plugin extends BasePlugin
     {
         return Craft::$app->getView()->renderTemplate('ai-seo-audit/settings', [
             'settings' => $this->getSettings(),
-            'sections' => Craft::$app->getSections()->getAllSections(),
+            'sections' => Craft::$app->getEntries()->getAllSections(),
         ]);
     }
 }

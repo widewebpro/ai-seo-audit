@@ -99,7 +99,7 @@ class DefaultController extends Controller
             if ($sectionId <= 0) {
                 continue;
             }
-            $section = Craft::$app->getSections()->getSectionById($sectionId);
+            $section = Craft::$app->getEntries()->getSectionById($sectionId);
             $sectionOptions[$sectionId] = $section ? $section->name : ('Section #' . $sectionId);
         }
 
