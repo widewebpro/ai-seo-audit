@@ -13,9 +13,7 @@ use wideweb\aiseoaudit\services\RuleEngineService;
 use wideweb\aiseoaudit\services\UrlDiscoveryService;
 use Craft;
 use craft\base\Plugin as BasePlugin;
-use craft\events\RegisterCpNavItemsEvent;
 use craft\events\RegisterUrlRulesEvent;
-use craft\web\twig\variables\Cp;
 use craft\web\UrlManager;
 use yii\base\Event;
 
@@ -39,11 +37,14 @@ class Plugin extends BasePlugin
 
     public function getCpNavItem(): ?array
     {
-        return [
-            'label' => Craft::t('ai-seo-audit', 'AI SEO Audit'),
-            'url' => 'ai-seo-audit',
-            'icon' => '@wideweb/aiseoaudit/icon.svg',
-        ];
+        $item = parent::getCpNavItem();
+        if ($item === null) {
+            return null;
+        }
+        $item['label'] = Craft::t('ai-seo-audit', 'AI SEO Audit');
+        $item['icon'] = '@wideweb/aiseoaudit/icon.svg';
+        $item['badgeCount'] = $this->audit->getPendingResultsCount();
+        return $item;
     }
 
     public function init(): void
@@ -74,19 +75,6 @@ class Plugin extends BasePlugin
                 $event->rules['ai-seo-audit/export-clusters/<runId:\d+>'] = 'ai-seo-audit/default/export-clusters';
                 $event->rules['ai-seo-audit/export-client-report/<runId:\d+>'] = 'ai-seo-audit/default/export-client-report';
                 $event->rules['ai-seo-audit/logs'] = 'ai-seo-audit/default/logs';
-            }
-        );
-
-        Event::on(
-            Cp::class,
-            Cp::EVENT_REGISTER_CP_NAV_ITEMS,
-            function (RegisterCpNavItemsEvent $event) {
-                foreach ($event->navItems as $key => $item) {
-                    if (($item['url'] ?? '') === 'ai-seo-audit') {
-                        $event->navItems[$key]['badgeCount'] = $this->audit->getPendingResultsCount();
-                        break;
-                    }
-                }
             }
         );
     }
