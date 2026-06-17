@@ -174,6 +174,7 @@ class AuditService extends Component
                 continue;
             }
 
+            $url = $this->resolveFetchUrl($url);
             $normalized = $this->normalizeUrl($url);
             $candidates[$normalized] = [
                 'url' => $url,
@@ -357,7 +358,7 @@ class AuditService extends Component
         try {
             $this->log()->info('Fetching URL', ['url' => $result->url]);
             $fetchStarted = microtime(true);
-            $html = $plugin->pageFetcher->fetch($this->resolveFetchUrl($result->url));
+            $html = $plugin->pageFetcher->fetch($result->url);
             $fetchMs = (int) round((microtime(true) - $fetchStarted) * 1000);
 
             $snapshot = $plugin->pageFetcher->buildSeoSnapshot($html);
