@@ -909,6 +909,7 @@ class AuditService extends Component
             $urlRecord->entryId = $result->entryId;
             $urlRecord->url = $result->url;
             $urlRecord->normalizedUrl = $this->normalizeUrl($result->url);
+            $urlRecord->normalizedUrlHash = md5($urlRecord->normalizedUrl);
             $urlRecord->status = 'queued';
             $urlRecord->sourceType = (int) $result->entryId > 0 ? 'entry' : 'sitemap';
             $urlRecord->depth = 0;
@@ -942,6 +943,7 @@ class AuditService extends Component
             $auditUrl->entryId = $result->entryId;
             $auditUrl->url = $result->url;
             $auditUrl->normalizedUrl = $this->normalizeUrl($result->url);
+            $auditUrl->normalizedUrlHash = md5($auditUrl->normalizedUrl);
             $auditUrl->sourceType = (int) $result->entryId > 0 ? 'entry' : 'sitemap';
             $auditUrl->depth = 0;
             $auditUrl->dateCreated = DateTimeHelper::now();

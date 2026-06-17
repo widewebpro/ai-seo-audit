@@ -60,7 +60,8 @@ class Install extends Migration
                 'auditResultId' => $this->integer(),
                 'entryId' => $this->integer(),
                 'url' => $this->string(2048)->notNull(),
-                'normalizedUrl' => $this->string(2048)->notNull(),
+                'normalizedUrl' => $this->text()->notNull(),
+                'normalizedUrlHash' => $this->string(32)->notNull(),
                 'status' => $this->string(32)->notNull()->defaultValue('queued'),
                 'sourceType' => $this->string(32)->notNull()->defaultValue('entry'),
                 'depth' => $this->smallInteger()->notNull()->defaultValue(0),
@@ -74,7 +75,7 @@ class Install extends Migration
             $this->createIndex(
                 null,
                 '{{%ai_seo_audit_urls}}',
-                ['auditRunId', 'normalizedUrl'],
+                ['auditRunId', 'normalizedUrlHash'],
                 true
             );
             $this->addForeignKey(

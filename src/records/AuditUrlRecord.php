@@ -12,6 +12,7 @@ use craft\db\ActiveRecord;
  * @property int|null $entryId
  * @property string $url
  * @property string $normalizedUrl
+ * @property string $normalizedUrlHash
  * @property string $status
  * @property string $sourceType
  * @property int $depth
