@@ -113,6 +113,10 @@ class Plugin extends BasePlugin
             $settings['pageSpeedApiKey'] = '';
         }
 
+        if (!isset($settings['frontendBaseUrl'])) {
+            $settings['frontendBaseUrl'] = '';
+        }
+
         parent::setSettings($settings);
     }
 

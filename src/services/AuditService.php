@@ -357,7 +357,7 @@ class AuditService extends Component
         try {
             $this->log()->info('Fetching URL', ['url' => $result->url]);
             $fetchStarted = microtime(true);
-            $html = $plugin->pageFetcher->fetch($result->url);
+            $html = $plugin->pageFetcher->fetch($this->resolveFetchUrl($result->url));
             $fetchMs = (int) round((microtime(true) - $fetchStarted) * 1000);
 
             $snapshot = $plugin->pageFetcher->buildSeoSnapshot($html);
@@ -1290,6 +1290,23 @@ class AuditService extends Component
         $title = ucwords($lastSegment);
 
         return $title !== '' ? $title : $url;
+    }
+
+    private function resolveFetchUrl(string $url): string
+    {
+        $base = trim(Plugin::getInstance()->getSettings()->frontendBaseUrl);
+        if ($base === '') {
+            return $url;
+        }
+        $parsed = parse_url($url);
+        $path = $parsed['path'] ?? '/';
+        if (isset($parsed['query'])) {
+            $path .= '?' . $parsed['query'];
+        }
+        if (isset($parsed['fragment'])) {
+            $path .= '#' . $parsed['fragment'];
+        }
+        return rtrim($base, '/') . $path;
     }
 
     /**

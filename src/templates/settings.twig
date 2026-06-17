@@ -47,6 +47,15 @@
     <div style="padding: 0.75em 0 0 0.25em; border-left: 2px solid var(--hairline-color, #e0e0e0); margin-left: 0.25em;">
 
         {{ forms.textField({
+            label: "Frontend fetch URL"|t('ai-seo-audit'),
+            instructions: "Base URL used when fetching pages for audit. Set this when the frontend is on a different host (e.g. headless setup). Example: http://host.docker.internal:3000 — leave empty to use entry URLs as-is."|t('ai-seo-audit'),
+            id: 'frontendBaseUrl',
+            name: 'frontendBaseUrl',
+            value: settings.frontendBaseUrl,
+            placeholder: 'http://host.docker.internal:3000',
+        }) }}
+
+        {{ forms.textField({
             label: "API base URL"|t('ai-seo-audit'),
             instructions: "Optional override. Leave empty to use provider default endpoint base."|t('ai-seo-audit'),
             id: 'apiBaseUrl',

@@ -12,7 +12,7 @@ class Settings extends Model
 
     public string $apiBaseUrl = '';
 
-    public string $modelVersion = 'deepseek/deepseek-v4-flash:free';
+    public string $modelVersion = '';
 
     public string $openAiOrganization = '';
 
@@ -23,7 +23,7 @@ class Settings extends Model
     public string $geminiApiVersion = 'v1beta';
 
     /** Seconds between LLM requests (helps free-tier rate limits). */
-    public int $requestDelaySeconds = 20;
+    public int $requestDelaySeconds = 5;
 
     /** Max tokens in the LLM response. */
     public int $maxResponseTokens = 512;
@@ -45,10 +45,12 @@ class Settings extends Model
 
     public string $pageSpeedApiKey = '';
 
+    public string $frontendBaseUrl = '';
+
     public function rules(): array
     {
         return [
-            [['llmProvider', 'apiKey', 'apiBaseUrl', 'modelVersion', 'openAiOrganization', 'openAiProject', 'anthropicVersion', 'geminiApiVersion', 'sitemapUrl', 'pageSpeedApiKey'], 'string'],
+            [['llmProvider', 'apiKey', 'apiBaseUrl', 'modelVersion', 'openAiOrganization', 'openAiProject', 'anthropicVersion', 'geminiApiVersion', 'sitemapUrl', 'pageSpeedApiKey', 'frontendBaseUrl'], 'string'],
             [['requestDelaySeconds', 'maxResponseTokens', 'maxSeoPayloadChars', 'maxDiscoveredUrls'], 'integer', 'min' => 0],
             [['enableLlm', 'enableSitemapDiscovery'], 'boolean'],
             [['selectedSectionIds'], 'safe'],
@@ -76,6 +78,7 @@ class Settings extends Model
             'sitemapUrl' => 'Sitemap URL',
             'maxDiscoveredUrls' => 'Max URLs from sitemap',
             'pageSpeedApiKey' => 'PageSpeed Insights API key',
+            'frontendBaseUrl' => 'Frontend fetch URL',
         ];
     }
 }
