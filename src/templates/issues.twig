@@ -1,0 +1,238 @@
+{% extends "_layouts/cp" %}
+{% set run = run ?? null %}
+{% set filters = filters ?? {} %}
+{% set issueRows = issueRows ?? [] %}
+{% set filterOptions = filterOptions ?? {} %}
+{% set topClusters = topClusters ?? [] %}
+{% set sectionOptions = sectionOptions ?? {} %}
+{% set trendComparison = trendComparison ?? {} %}
+{% set title = run ? "Issues — run #" ~ run.id : "Issues"|t('ai-seo-audit') %}
+
+{% block content %}
+    {% if not run %}
+        <p class="light">{{ "Open an audit run first."|t('ai-seo-audit') }}</p>
+    {% else %}
+        <p>
+            <a href="{{ url('ai-seo-audit/view/' ~ run.id) }}">&larr; {{ "Back to run"|t('ai-seo-audit') }}</a>
+        </p>
+
+        <div class="pane">
+            <form method="get" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+                <div>
+                    <label>{{ "Severity"|t('ai-seo-audit') }}</label><br>
+                    <select name="severity">
+                        <option value="">{{ "All"|t('ai-seo-audit') }}</option>
+                        {% for severity in filterOptions.severities ?? [] %}
+                            <option value="{{ severity }}" {% if filters.severity == severity %}selected{% endif %}>{{ severity }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label>{{ "Status"|t('ai-seo-audit') }}</label><br>
+                    <select name="status">
+                        <option value="">{{ "All"|t('ai-seo-audit') }}</option>
+                        {% for status in filterOptions.statuses ?? [] %}
+                            <option value="{{ status }}" {% if filters.status == status %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label>{{ "Issue code"|t('ai-seo-audit') }}</label><br>
+                    <select name="issueCode">
+                        <option value="">{{ "All"|t('ai-seo-audit') }}</option>
+                        {% for issueCode in filterOptions.issueCodes ?? [] %}
+                            <option value="{{ issueCode }}" {% if filters.issueCode == issueCode %}selected{% endif %}>{{ issueCode }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label>{{ "Section"|t('ai-seo-audit') }}</label><br>
+                    <select name="sectionId">
+                        <option value="">{{ "All"|t('ai-seo-audit') }}</option>
+                        {% for sectionId, sectionName in sectionOptions %}
+                            <option value="{{ sectionId }}" {% if filters.sectionId == (sectionId ~ '') %}selected{% endif %}>{{ sectionName }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label>{{ "Owner"|t('ai-seo-audit') }}</label><br>
+                    <select name="ownerSuggestion">
+                        <option value="">{{ "All"|t('ai-seo-audit') }}</option>
+                        {% for owner in filterOptions.ownerSuggestions ?? [] %}
+                            <option value="{{ owner }}" {% if filters.ownerSuggestion == owner %}selected{% endif %}>{{ owner }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="buttons">
+                    <button type="submit" class="btn submit">{{ "Apply filters"|t('ai-seo-audit') }}</button>
+                    <a class="btn" href="{{ url('ai-seo-audit/issues/' ~ run.id) }}">{{ "Reset"|t('ai-seo-audit') }}</a>
+                    <a class="btn" href="{{ url('ai-seo-audit/export-client-report/' ~ run.id, filters) }}">{{ "Client report (HTML/PDF)"|t('ai-seo-audit') }}</a>
+                    <a class="btn" href="{{ url('ai-seo-audit/export-issues/' ~ run.id, filters) }}">{{ "Export issues CSV"|t('ai-seo-audit') }}</a>
+                    <a class="btn" href="{{ url('ai-seo-audit/export-clusters/' ~ run.id, filters) }}">{{ "Export clusters CSV"|t('ai-seo-audit') }}</a>
+                </div>
+            </form>
+        </div>
+
+        {% if trendComparison.previousRunId %}
+            <div class="pane" style="margin-top:1rem;">
+                <h2 style="margin-top:0;">{{ "Trend vs previous run"|t('ai-seo-audit') }} #{{ trendComparison.previousRunId }}</h2>
+                <p class="light">
+                    {{ "Total issue delta"|t('ai-seo-audit') }}:
+                    <strong>{{ trendComparison.issueDelta > 0 ? '+' ~ trendComparison.issueDelta : trendComparison.issueDelta }}</strong>
+                </p>
+                <p class="light">
+                    {{ "Severity deltas"|t('ai-seo-audit') }}:
+                    critical {{ trendComparison.severityDelta.critical > 0 ? '+' ~ trendComparison.severityDelta.critical : trendComparison.severityDelta.critical }},
+                    high {{ trendComparison.severityDelta.high > 0 ? '+' ~ trendComparison.severityDelta.high : trendComparison.severityDelta.high }},
+                    medium {{ trendComparison.severityDelta.medium > 0 ? '+' ~ trendComparison.severityDelta.medium : trendComparison.severityDelta.medium }},
+                    low {{ trendComparison.severityDelta.low > 0 ? '+' ~ trendComparison.severityDelta.low : trendComparison.severityDelta.low }}
+                </p>
+            </div>
+        {% endif %}
+
+        {% if topClusters is not empty %}
+            <div class="pane" style="margin-top:1rem;">
+                <h2 style="margin-top:0;">{{ "Top clusters"|t('ai-seo-audit') }}</h2>
+                <table class="data fullwidth">
+                    <thead>
+                        <tr>
+                            <th>{{ "Issue code"|t('ai-seo-audit') }}</th>
+                            <th>{{ "Severity"|t('ai-seo-audit') }}</th>
+                            <th>{{ "Owner"|t('ai-seo-audit') }}</th>
+                            <th>{{ "Top section"|t('ai-seo-audit') }}</th>
+                            <th>{{ "Affected pages"|t('ai-seo-audit') }}</th>
+                            <th>{{ "Max priority"|t('ai-seo-audit') }}</th>
+                            <th>{{ "Examples"|t('ai-seo-audit') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cluster in topClusters %}
+                            <tr>
+                                <td><code>{{ cluster.issueCode }}</code></td>
+                                <td>{{ cluster.severity ?: '—' }}</td>
+                                <td>{{ cluster.ownerSuggestion ?: '—' }}</td>
+                                <td>
+                                    {% if cluster.sectionId and sectionOptions[cluster.sectionId] is defined %}
+                                        {{ sectionOptions[cluster.sectionId] }}
+                                    {% elseif cluster.sectionId %}
+                                        {{ "Section #" ~ cluster.sectionId }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>{{ cluster.affectedCount }}</td>
+                                <td>{{ cluster.maxPriorityScore }}</td>
+                                <td>
+                                    {% if cluster.sampleUrls is not empty %}
+                                        {% for sampleUrl in cluster.sampleUrls %}
+                                            <a href="{{ sampleUrl }}" target="_blank" rel="noopener">{{ sampleUrl }}</a><br>
+                                        {% endfor %}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {% if issueRows is empty %}
+            <p class="light">{{ "No issues for selected filters."|t('ai-seo-audit') }}</p>
+        {% else %}
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        <th>{{ "Priority"|t('ai-seo-audit') }}</th>
+                        <th>{{ "Issue"|t('ai-seo-audit') }}</th>
+                        <th>{{ "Severity"|t('ai-seo-audit') }}</th>
+                        <th>{{ "Owner"|t('ai-seo-audit') }}</th>
+                        <th>{{ "Page"|t('ai-seo-audit') }}</th>
+                        <th>{{ "Fix"|t('ai-seo-audit') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for issue in issueRows %}
+                        <tr>
+                            <td>{{ issue.priorityScore }}</td>
+                            <td>
+                                <code>{{ issue.issueCode }}</code>
+                                {% if issue.message %}
+                                    <br><span class="light">{{ issue.message }}</span>
+                                {% endif %}
+                                {% if issue.hasPsiMetrics or issue.psiMissingReason or issue.hasHtmlValidationMetrics or issue.hasSitePolicyMetrics %}
+                                    <br><span class="light">
+                                        {% if issue.hasPsiMetrics %}
+                                            PSI: {{ issue.performanceScore|number_format(1, '.', '') }} |
+                                        {% elseif issue.psiMissingReason %}
+                                            PSI: n/a ({{ issue.psiMissingReason|replace({'_':' '}) }}) |
+                                        {% endif %}
+                                        {% if issue.hasHtmlValidationMetrics %}
+                                            HTML errors: {{ issue.htmlErrorCount }} |
+                                        {% endif %}
+                                        {% if issue.hasSitePolicyMetrics %}
+                                            {% if issue.robotsDisallowAll %}
+                                                robots: disallow-all |
+                                            {% elseif issue.robotsBlockedByPath %}
+                                                robots: path blocked |
+                                            {% else %}
+                                                robots: ok |
+                                            {% endif %}
+                                            sitemap: {{ issue.sitemapReachable ? 'ok' : 'missing' }}
+                                        {% else %}
+                                            robots/sitemap: n/a
+                                        {% endif %}
+                                    </span>
+                                    {% if issue.hasHtmlValidationMetrics and issue.htmlValidatorUrl %}
+                                        <br><a href="{{ issue.htmlValidatorUrl }}" target="_blank" rel="noopener" class="light">Open W3C validation details</a>
+                                    {% endif %}
+                                    {% if issue.hasHtmlValidationMetrics and issue.htmlErrorExamples is not empty %}
+                                        <details class="light" style="margin-top:4px;">
+                                            <summary>Example HTML errors</summary>
+                                            <ul style="margin-top:6px;">
+                                                {% for sample in issue.htmlErrorExamples %}
+                                                    <li>{{ sample }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </details>
+                                    {% endif %}
+                                {% elseif issue.externalUrlLikelyPrivate %}
+                                    <br><span class="light">External metrics skipped: URL looks local/private.</span>
+                                {% elseif issue.externalMetricsNote == 'psi_api_key_missing' %}
+                                    <br><span class="light">PSI skipped: add PageSpeed Insights API key (W3C + robots/sitemap still collected).</span>
+                                {% elseif issue.externalChecksSampledOut %}
+                                    <br><span class="light">External metrics skipped by sampling budget.</span>
+                                {% elseif issue.externalChecksAttempted and not issue.externalChecksSucceeded %}
+                                    <br><span class="light">External metrics unavailable: endpoint unreachable or limited.</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ issue.severity }}</td>
+                            <td>{{ issue.ownerSuggestion ?: '—' }}</td>
+                            <td>
+                                {% if issue.url %}
+                                    <a href="{{ issue.url }}" target="_blank" rel="noopener">{{ issue.title ?: issue.url }}</a>
+                                    <br><span class="light">{{ issue.url }}</span>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if issue.fixInstruction %}
+                                    <div class="readable">{{ issue.fixInstruction }}</div>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    {% endif %}
+{% endblock %}

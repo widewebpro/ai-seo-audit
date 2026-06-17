@@ -1,0 +1,108 @@
+{% extends "_layouts/cp" %}
+{% set title = "AI SEO Audit"|t('ai-seo-audit') %}
+
+{% import "_includes/forms" as forms %}
+{% set clearAllMessage = "Delete all audit runs and results?"|t('ai-seo-audit')|e('js') %}
+
+{# Fallback when the template is previewed without controller variables #}
+{% set plugin = craft.app.plugins.getPlugin('ai-seo-audit') %}
+{% set settings = settings ?? plugin.getSettings() %}
+{% set runs = runs ?? plugin.audit.getRecentRuns() %}
+
+{% block content %}
+    {% if not settings.enableLlm %}
+        <div class="pane alert">
+            <p>{{ "LLM is off — audit will only collect prepared SEO data for each page (no API calls)."|t('ai-seo-audit') }}</p>
+        </div>
+    {% elseif not settings.apiKey %}
+        <div class="pane alert alert-warning">
+            <p>{{ "Configure your LLM API key in"|t('ai-seo-audit') }}
+                <a href="{{ url('settings/plugins/ai-seo-audit') }}">{{ "plugin settings"|t('ai-seo-audit') }}</a>.
+            </p>
+        </div>
+    {% endif %}
+
+    <form method="post" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ actionInput('ai-seo-audit/default/run') }}
+
+        <div class="pane">
+            <h2>{{ "Run audit"|t('ai-seo-audit') }}</h2>
+            <p class="light">
+                {% if settings.enableLlm %}
+                    {{ "Fetches live frontend HTML and sends a compact SEO snapshot to the LLM."|t('ai-seo-audit') }}
+                {% else %}
+                    {{ "Fetches live frontend HTML and builds a compact SEO snapshot per page (preview mode)."|t('ai-seo-audit') }}
+                {% endif %}
+            </p>
+            {% if settings.enableSitemapDiscovery and settings.sitemapUrl %}
+                <p class="light">{{ "Sitemap discovery is enabled for this run:"|t('ai-seo-audit') }} <code>{{ settings.sitemapUrl }}</code></p>
+            {% endif %}
+
+            {% if settings.selectedSectionIds is empty %}
+                <p class="light">{{ "No sections are preselected in plugin settings. Audit will run for all live entries across the site."|t('ai-seo-audit') }}</p>
+            {% else %}
+                <p class="light">{{ "You can uncheck all sections to run a full-site audit."|t('ai-seo-audit') }}</p>
+                <div class="checkboxgroup">
+                    {% for section in craft.app.sections.getAllSections() %}
+                        {% if section.id in settings.selectedSectionIds %}
+                            <label>
+                                <input type="checkbox" name="sectionIds[]" value="{{ section.id }}" checked>
+                                {{ section.name }}
+                            </label>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="buttons">
+                <button type="submit" class="btn submit" {% if settings.enableLlm and not settings.apiKey %}disabled{% endif %}>
+                    {{ "Start audit"|t('ai-seo-audit') }}
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <hr>
+
+    <p>
+        <a href="{{ url('ai-seo-audit/logs') }}" class="btn">{{ "Debug log"|t('ai-seo-audit') }}</a>
+        <span class="light">{{ "Queue status, timings, errors"|t('ai-seo-audit') }}</span>
+    </p>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+        <h2 style="margin:0;">{{ "Recent runs"|t('ai-seo-audit') }}</h2>
+        {% if runs is not empty %}
+            <form method="post" onsubmit='return confirm("{{ clearAllMessage }}");'>
+                {{ csrfInput() }}
+                {{ actionInput('ai-seo-audit/default/clear') }}
+                <button type="submit" class="btn">{{ "Clear all audits"|t('ai-seo-audit') }}</button>
+            </form>
+        {% endif %}
+    </div>
+
+    {% if runs is empty %}
+        <p class="light">{{ "No audits yet."|t('ai-seo-audit') }}</p>
+    {% else %}
+        <table class="data fullwidth">
+            <thead>
+                <tr>
+                    <th>{{ "Date"|t('ai-seo-audit') }}</th>
+                    <th>{{ "Status"|t('ai-seo-audit') }}</th>
+                    <th>{{ "Progress"|t('ai-seo-audit') }}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in runs %}
+                    <tr>
+                        <td>{{ run.dateCreated|datetime }}</td>
+                        <td><span class="status {{ run.status|replace({'running': 'pending', 'completed': 'live'}) }}"></span></td>
+                        <td>{{ run.processedEntries }} / {{ run.totalEntries }}</td>
+                        <td><a href="{{ url('ai-seo-audit/view/' ~ run.id) }}">{{ "View"|t('ai-seo-audit') }}</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

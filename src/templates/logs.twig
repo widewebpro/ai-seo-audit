@@ -1,0 +1,58 @@
+{% extends "_layouts/cp" %}
+{% set title = "AI SEO Audit — Debug log"|t('ai-seo-audit') %}
+
+{% block content %}
+    <p>
+        <a href="{{ url('ai-seo-audit') }}">&larr; {{ "Back to audits"|t('ai-seo-audit') }}</a>
+    </p>
+
+    <div class="pane">
+        <h2>{{ "Queue & audit status"|t('ai-seo-audit') }}</h2>
+        <table class="data">
+            <tbody>
+                <tr>
+                    <th>{{ "Pending pages (DB)"|t('ai-seo-audit') }}</th>
+                    <td>{{ stats.pendingResults }}</td>
+                </tr>
+                <tr>
+                    <th>{{ "Active audit runs"|t('ai-seo-audit') }}</th>
+                    <td>{{ stats.runningRuns }}</td>
+                </tr>
+                <tr>
+                    <th>{{ "Open issues (rules)"|t('ai-seo-audit') }}</th>
+                    <td>{{ stats.openIssues }}</td>
+                </tr>
+                <tr>
+                    <th>{{ "Plugin jobs in queue"|t('ai-seo-audit') }}</th>
+                    <td>{{ stats.pluginQueueJobs }}</td>
+                </tr>
+                <tr>
+                    <th>{{ "All jobs in queue"|t('ai-seo-audit') }}</th>
+                    <td>{{ stats.totalQueueJobs }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="light">
+            {{ "If plugin jobs stay > 0 but pending pages is 0, clear the queue or check for stuck jobs from other plugins."|t('ai-seo-audit') }}
+        </p>
+    </div>
+
+    <div class="pane" style="margin-top:1rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+            <h2 style="margin:0;">{{ "Log file"|t('ai-seo-audit') }}</h2>
+            <form method="post">
+                {{ csrfInput() }}
+                {{ actionInput('ai-seo-audit/default/clear-log') }}
+                <button type="submit" class="btn">{{ "Clear log"|t('ai-seo-audit') }}</button>
+            </form>
+        </div>
+        <p class="light"><code>{{ logPath }}</code></p>
+        <p class="light">{{ "Also in Craft logs under category"|t('ai-seo-audit') }} <code>ai-seo-audit</code></p>
+
+        {% if logTail %}
+            <pre style="max-height:70vh;overflow:auto;font-size:12px;line-height:1.4;background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:4px;">{{ logTail|e }}</pre>
+        {% else %}
+            <p class="light">{{ "No log entries yet. Run an audit and process the queue."|t('ai-seo-audit') }}</p>
+        {% endif %}
+    </div>
+{% endblock %}

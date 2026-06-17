@@ -1,0 +1,112 @@
+{% extends "_layouts/cp" %}
+{% set plugin = craft.app.plugins.getPlugin('ai-seo-audit') %}
+{% set run = run ?? null %}
+{% set results = results ?? [] %}
+{% set issueCounts = issueCounts ?? {} %}
+{% set trendComparison = trendComparison ?? {} %}
+{% set title = run ? "Audit run #" ~ run.id : "Audit run"|t('ai-seo-audit') %}
+{% set stopRunMessage = "Stop this audit run? Pending pages will be cancelled."|t('ai-seo-audit')|e('js') %}
+
+{% block content %}
+    {% if not run %}
+        <p class="light">{{ "Open an audit from the AI SEO Audit screen."|t('ai-seo-audit') }}</p>
+    {% else %}
+    <p>
+        <a href="{{ url('ai-seo-audit') }}">&larr; {{ "Back to audits"|t('ai-seo-audit') }}</a>
+    </p>
+
+    <p>
+        <a href="{{ url('ai-seo-audit/export/' ~ run.id) }}" class="btn">{{ "Export CSV"|t('ai-seo-audit') }}</a>
+        <a href="{{ url('ai-seo-audit/export-client-report/' ~ run.id) }}" class="btn">{{ "Download client report (HTML/PDF)"|t('ai-seo-audit') }}</a>
+        <a href="{{ url('ai-seo-audit/issues/' ~ run.id) }}" class="btn">{{ "Issues"|t('ai-seo-audit') }}</a>
+        {% if run.status in ['pending', 'running'] %}
+            <form method="post" style="display:inline-block;margin-left:8px;" onsubmit='return confirm("{{ stopRunMessage }}");'>
+                {{ csrfInput() }}
+                {{ actionInput('ai-seo-audit/default/stop-run') }}
+                <input type="hidden" name="runId" value="{{ run.id }}">
+                <button type="submit" class="btn">{{ "Stop audit"|t('ai-seo-audit') }}</button>
+            </form>
+        {% endif %}
+    </p>
+
+    <div class="pane">
+        <p><strong>{{ "Status"|t('ai-seo-audit') }}:</strong> {{ run.status }}</p>
+        <p><strong>{{ "Progress"|t('ai-seo-audit') }}:</strong> {{ run.processedEntries }} / {{ run.totalEntries }}</p>
+        <p><strong>{{ "Scope"|t('ai-seo-audit') }}:</strong> {{ run.sectionIdsArray is empty ? "Whole site"|t('ai-seo-audit') : "Selected sections"|t('ai-seo-audit') }}</p>
+        <p><strong>{{ "Started"|t('ai-seo-audit') }}:</strong> {{ run.dateCreated|datetime }}</p>
+    </div>
+
+    {% if trendComparison.previousRunId %}
+        <div class="pane">
+            <p><strong>{{ "Trend vs previous run"|t('ai-seo-audit') }} #{{ trendComparison.previousRunId }}:</strong></p>
+            <p>{{ "Total issue delta"|t('ai-seo-audit') }}: <strong>{{ trendComparison.issueDelta > 0 ? '+' ~ trendComparison.issueDelta : trendComparison.issueDelta }}</strong></p>
+            <p class="light">
+                critical {{ trendComparison.severityDelta.critical > 0 ? '+' ~ trendComparison.severityDelta.critical : trendComparison.severityDelta.critical }},
+                high {{ trendComparison.severityDelta.high > 0 ? '+' ~ trendComparison.severityDelta.high : trendComparison.severityDelta.high }},
+                medium {{ trendComparison.severityDelta.medium > 0 ? '+' ~ trendComparison.severityDelta.medium : trendComparison.severityDelta.medium }},
+                low {{ trendComparison.severityDelta.low > 0 ? '+' ~ trendComparison.severityDelta.low : trendComparison.severityDelta.low }}
+            </p>
+        </div>
+    {% endif %}
+
+    <table class="data fullwidth">
+        <thead>
+            <tr>
+                <th>{{ "Page"|t('ai-seo-audit') }}</th>
+                <th>{{ "Score"|t('ai-seo-audit') }}</th>
+                <th>{{ "Status"|t('ai-seo-audit') }}</th>
+                <th>{{ "Issues"|t('ai-seo-audit') }}</th>
+                <th>{{ "Details"|t('ai-seo-audit') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+                <tr>
+                    <td>
+                        <a href="{{ result.url }}" target="_blank" rel="noopener">{{ result.title ?: result.url }}</a>
+                        <br><span class="light">{{ result.url }}</span>
+                    </td>
+                    <td>
+                        {% if result.score is not null %}
+                            {{ result.score }}/100
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ result.status }}</td>
+                    <td>{{ issueCounts[result.id] ?? 0 }}</td>
+                    <td>
+                        {% if result.status == 'error' %}
+                            <span class="error">{{ result.errorMessage }}</span>
+                        {% elseif result.status == 'preview' and result.htmlExcerpt %}
+                            <p class="light">{{ "LLM skipped — prepared payload:"|t('ai-seo-audit') }}</p>
+                            <details open>
+                                <summary>{{ "Prepared data for LLM"|t('ai-seo-audit') }}</summary>
+                                <pre style="white-space:pre-wrap;font-size:12px;margin-top:8px;">{{ result.htmlExcerpt }}</pre>
+                            </details>
+                        {% elseif result.analysis %}
+                            <details>
+                                <summary>{{ "Analysis"|t('ai-seo-audit') }}</summary>
+                                <div class="readable">{{ result.analysis|nl2br }}</div>
+                            </details>
+                            {% if result.htmlExcerpt %}
+                                <details class="light">
+                                    <summary>{{ "Prepared data for LLM"|t('ai-seo-audit') }}</summary>
+                                    <pre style="white-space:pre-wrap;font-size:12px;">{{ result.htmlExcerpt }}</pre>
+                                </details>
+                            {% endif %}
+                        {% elseif result.htmlExcerpt %}
+                            <details open>
+                                <summary>{{ "Prepared data for LLM"|t('ai-seo-audit') }}</summary>
+                                <pre style="white-space:pre-wrap;font-size:12px;">{{ result.htmlExcerpt }}</pre>
+                            </details>
+                        {% else %}
+                            <span class="light">{{ "Pending"|t('ai-seo-audit') }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+{% endblock %}

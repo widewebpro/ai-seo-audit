@@ -1,0 +1,182 @@
+{% import "_includes/forms" as forms %}
+
+{{ forms.lightswitchField({
+    label: "Enable AI analysis"|t('ai-seo-audit'),
+    instructions: "Off: only fetch pages and show prepared SEO data (no LLM provider calls)."|t('ai-seo-audit'),
+    id: 'enableLlm',
+    name: 'enableLlm',
+    on: settings.enableLlm,
+}) }}
+
+<hr>
+
+{{ forms.selectField({
+    label: "LLM provider"|t('ai-seo-audit'),
+    instructions: "Choose where audit prompts are sent."|t('ai-seo-audit'),
+    id: 'llmProvider',
+    name: 'llmProvider',
+    value: settings.llmProvider,
+    options: [
+        { label: 'OpenRouter', value: 'openrouter' },
+        { label: 'OpenAI', value: 'openai' },
+        { label: 'Anthropic', value: 'anthropic' },
+        { label: 'Google Gemini', value: 'gemini' },
+    ],
+}) }}
+
+{{ forms.textField({
+    label: "LLM API Key"|t('ai-seo-audit'),
+    instructions: "API key for selected provider. OpenRouter/OpenAI/Anthropic use bearer-style keys; Gemini uses key query param."|t('ai-seo-audit'),
+    id: 'apiKey',
+    name: 'apiKey',
+    type: 'password',
+    value: settings.apiKey,
+    autocomplete: 'off',
+}) }}
+
+{{ forms.textField({
+    label: "Language model"|t('ai-seo-audit'),
+    instructions: "Model id for selected provider (examples: deepseek/deepseek-v3.1, gpt-4o-mini, claude-3-5-sonnet-latest, gemini-1.5-flash)."|t('ai-seo-audit'),
+    id: 'modelVersion',
+    name: 'modelVersion',
+    value: settings.modelVersion,
+}) }}
+
+<details class="ai-seo-advanced">
+    <summary style="cursor:pointer; color:var(--link-color, #0d78f2); font-size:0.875em; margin: 0.75em 0;">{{ "Advanced settings"|t('ai-seo-audit') }}</summary>
+    <div style="padding: 0.75em 0 0 0.25em; border-left: 2px solid var(--hairline-color, #e0e0e0); margin-left: 0.25em;">
+
+        {{ forms.textField({
+            label: "API base URL"|t('ai-seo-audit'),
+            instructions: "Optional override. Leave empty to use provider default endpoint base."|t('ai-seo-audit'),
+            id: 'apiBaseUrl',
+            name: 'apiBaseUrl',
+            value: settings.apiBaseUrl,
+        }) }}
+
+        {{ forms.textField({
+            label: "OpenAI organization (optional)"|t('ai-seo-audit'),
+            instructions: "Sent as OpenAI-Organization header for provider=openai."|t('ai-seo-audit'),
+            id: 'openAiOrganization',
+            name: 'openAiOrganization',
+            value: settings.openAiOrganization,
+        }) }}
+
+        {{ forms.textField({
+            label: "OpenAI project (optional)"|t('ai-seo-audit'),
+            instructions: "Sent as OpenAI-Project header for provider=openai."|t('ai-seo-audit'),
+            id: 'openAiProject',
+            name: 'openAiProject',
+            value: settings.openAiProject,
+        }) }}
+
+        {{ forms.textField({
+            label: "Anthropic API version"|t('ai-seo-audit'),
+            instructions: "Used only for provider=anthropic."|t('ai-seo-audit'),
+            id: 'anthropicVersion',
+            name: 'anthropicVersion',
+            value: settings.anthropicVersion,
+        }) }}
+
+        {{ forms.textField({
+            label: "Gemini API version"|t('ai-seo-audit'),
+            instructions: "Used only for provider=gemini (v1beta, v1)."|t('ai-seo-audit'),
+            id: 'geminiApiVersion',
+            name: 'geminiApiVersion',
+            value: settings.geminiApiVersion,
+        }) }}
+
+        {{ forms.textField({
+            label: "Delay between pages (seconds)"|t('ai-seo-audit'),
+            instructions: "Pause between LLM calls. Increase this if provider rate-limits requests."|t('ai-seo-audit'),
+            id: 'requestDelaySeconds',
+            name: 'requestDelaySeconds',
+            type: 'number',
+            min: 0,
+            value: settings.requestDelaySeconds,
+        }) }}
+
+        {{ forms.textField({
+            label: "Max response tokens"|t('ai-seo-audit'),
+            instructions: "Limits LLM reply length (default 512)."|t('ai-seo-audit'),
+            id: 'maxResponseTokens',
+            name: 'maxResponseTokens',
+            type: 'number',
+            min: 128,
+            value: settings.maxResponseTokens,
+        }) }}
+
+        {{ forms.textField({
+            label: "Max SEO data sent to LLM (chars)"|t('ai-seo-audit'),
+            instructions: "Only title, meta, headings, and alt-text stats are sent — not full HTML."|t('ai-seo-audit'),
+            id: 'maxSeoPayloadChars',
+            name: 'maxSeoPayloadChars',
+            type: 'number',
+            min: 500,
+            value: settings.maxSeoPayloadChars,
+        }) }}
+
+    </div>
+</details>
+
+<hr>
+
+{{ forms.lightswitchField({
+    label: "Enable sitemap URL discovery"|t('ai-seo-audit'),
+    instructions: "When enabled, URLs from sitemap are added to the run in addition to entry URLs."|t('ai-seo-audit'),
+    id: 'enableSitemapDiscovery',
+    name: 'enableSitemapDiscovery',
+    on: settings.enableSitemapDiscovery,
+}) }}
+
+{{ forms.textField({
+    label: "Sitemap URL"|t('ai-seo-audit'),
+    instructions: "Example: https://example.com/sitemap.xml"|t('ai-seo-audit'),
+    id: 'sitemapUrl',
+    name: 'sitemapUrl',
+    value: settings.sitemapUrl,
+}) }}
+
+{{ forms.textField({
+    label: "Max URLs from sitemap"|t('ai-seo-audit'),
+    instructions: "Safety cap for sitemap discovery in one run."|t('ai-seo-audit'),
+    id: 'maxDiscoveredUrls',
+    name: 'maxDiscoveredUrls',
+    type: 'number',
+    min: 0,
+    value: settings.maxDiscoveredUrls,
+}) }}
+
+<hr>
+
+{{ forms.textField({
+    label: "PageSpeed Insights API key"|t('ai-seo-audit'),
+    instructions: "Required for PSI checks. Without this key, external checks fall back to W3C validator and robots/sitemap only."|t('ai-seo-audit'),
+    id: 'pageSpeedApiKey',
+    name: 'pageSpeedApiKey',
+    type: 'password',
+    value: settings.pageSpeedApiKey,
+    autocomplete: 'off',
+}) }}
+
+<hr>
+
+<h3>{{ "Sections to analyze"|t('ai-seo-audit') }}</h3>
+<p class="light">{{ "Choose default sections for new audits. If nothing is selected, audit runs across the whole site."|t('ai-seo-audit') }}</p>
+
+<div class="checkboxgroup">
+    <ul class="list">
+    {% for section in sections %}
+        {% set checked = section.id in settings.selectedSectionIds %}
+        <li>
+        <label>
+            <input type="checkbox"
+                   name="selectedSectionIds[]"
+                   value="{{ section.id }}"
+                   {% if checked %}checked{% endif %}>
+            {{ section.name }} <span class="light">({{ section.handle }})</span>
+        </label>
+        </li>
+    {% endfor %}
+    </ul>
+</div>
